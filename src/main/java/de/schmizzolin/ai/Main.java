@@ -8,7 +8,7 @@ public final class Main {
     private Main() {
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         Path apiKeyFile = Path.of(System.getProperty("user.home"), ".geminiApiKey");
         String apiKey = Files.readString(apiKeyFile).trim();
         if (apiKey.isBlank()) {
