@@ -9,28 +9,34 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Objects;
 
-public final class GeminiExample {
+public final class GeminiClient {
     private static final URI API_URL = URI.create("https://generativelanguage.googleapis.com/v1beta/interactions");
     private static final String MODEL = "gemini-3.8-flash";
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    private GeminiExample() {
+    private final String apiKey;
+    private final HttpClient httpClient;
+
+    public GeminiClient(String apiKey) {
+        this.apiKey = Objects.requireNonNull(apiKey, "apiKey");
+        if (apiKey.isBlank()) {
+            throw new IllegalArgumentException("Der API-Schlüssel darf nicht leer sein.");
+        }
+        this.httpClient = HttpClient.newHttpClient();
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Path apiKeyFile = Path.of(System.getProperty("user.home"), ".geminiApiKey");
-        String apiKey = Files.readString(apiKeyFile).trim();
-        if (apiKey.isBlank()) {
-            throw new IllegalStateException("Die Datei " + apiKeyFile + " enthält keinen API-Schlüssel.");
+    public String generateText(String prompt) throws IOException, InterruptedException {
+        Objects.requireNonNull(prompt, "prompt");
+        if (prompt.isBlank()) {
+            throw new IllegalArgumentException("Der Prompt darf nicht leer sein.");
         }
 
         ObjectNode requestBody = JSON.createObjectNode();
         requestBody.put("model", MODEL);
-        requestBody.put("input", "Hello, wie geht es dir");
+        requestBody.put("input", prompt);
 
         HttpRequest request = HttpRequest.newBuilder(API_URL)
                 .timeout(Duration.ofSeconds(60))
@@ -39,18 +45,16 @@ public final class GeminiExample {
                 .POST(HttpRequest.BodyPublishers.ofString(JSON.writeValueAsString(requestBody)))
                 .build();
 
-        HttpResponse<String> response = HttpClient.newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new IOException("Gemini API Fehler (" + response.statusCode() + "): " + response.body());
         }
 
-        JsonNode responseJson = JSON.readTree(response.body());
-        System.out.println(readAnswer(responseJson));
+        return readAnswer(JSON.readTree(response.body()));
     }
 
-    static String readAnswer(JsonNode responseJson) throws IOException {
+    private static String readAnswer(JsonNode responseJson) throws IOException {
         if (responseJson == null || !"completed".equals(responseJson.path("status").asText())) {
             throw new IOException("Die Gemini-Anfrage wurde nicht abgeschlossen: " + responseJson);
         }
