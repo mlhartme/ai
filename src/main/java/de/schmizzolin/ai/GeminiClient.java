@@ -12,6 +12,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * @see <a href="https://ai.google.dev/api/interactions-api">Google Gemini Interactions REST API</a>
+ */
 public final class GeminiClient {
     private static final URI API_URL = URI.create("https://generativelanguage.googleapis.com/v1beta/interactions");
     private static final String MODEL = "gemini-3.8-flash";
