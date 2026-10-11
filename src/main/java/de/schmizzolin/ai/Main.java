@@ -12,8 +12,6 @@ import java.time.Duration;
  * @see <a href="https://docs.langchain4j.dev/integrations/language-models/google-ai-gemini/">LangChain4j Gemini</a>
  */
 public final class Main {
-    private static final String MODEL = "gemini-3.8-flash";
-
     private Main() {
     }
 
@@ -25,14 +23,11 @@ public final class Main {
         }
         ChatModel model = GoogleAiGeminiChatModel.builder()
                 .apiKey(apiKey)
-                .modelName(MODEL)
+                .modelName("gemini-3.8-flash")
                 .timeout(Duration.ofSeconds(60))
                 .build();
 
         String answer = model.chat("Hello, wie geht es dir");
-        if (answer == null || answer.isBlank()) {
-            throw new IOException("Die API-Antwort enthält keinen Text.");
-        }
         System.out.println(answer);
     }
 }
